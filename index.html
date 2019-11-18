@@ -52,9 +52,11 @@
   <section>
     <h4>1. Get a Clarifai API Key</h4>
     <p>
-      TODO
+      <strong><a href="https://portal.clarifai.com/signup">Sign up to Clarifai to get your API key.</a></strong> Just follow the instructions. It does not require any payment or card number. But beyond the first 5000 images per month, it will stop working unless you start paying for it.
     </p>
-
+    <p>
+      <strong>Why an API key?</strong> Clarifai tags your images with machine learning techniques. You send it images via the web and it responds with tags. The "API" is the door to the service: it has both an address and a lock that requires a key. The key is personal, and Clarifai uses it to monitor your use. Indeed the service is only free up to 5000 images a month. This tool knows where the address is, but you need to tell it your key. The resulting bookmarklet will only visible to you, so no one will get your API key. You can go to Clarifai to know how many of your monthly free queries are used.
+    </p>
   </section>
 
   <section>
@@ -91,16 +93,17 @@
   <section>
     <h2>How to use</h2>
     <p>
-      <strong>1. Browse to the <a href="https://tools.digitalmethods.net/beta/googleImages/">DMI Tools Google Image Scraper</a>.</strong>
-      TODO
+      <strong>1. Browse to the <a href="https://tools.digitalmethods.net/beta/googleImages/" target="_blank">DMI Google Image Scraper</a>.</strong>
+      This tool by the <a href="https://wiki.digitalmethods.net/">Digital Methods Initiative</a> simplifies the querying of Google Images.
     </p>
     <p>
-      <strong>2. Type your query.</strong>
-      TODO
+      <strong>2. Type your query and WAIT.</strong> The DMI Google Image Scraper has <a href="https://wiki.digitalmethods.net/Dmi/ToolGoogleImagesScraper">documentation</a> but basically, type one or more words in the field <em>"Key words (separated by commas)"</em> and click on Scrape Images. Then <strong style="color:#D00">wait until the table has appeared on the bottom of the page</strong>. The bookmarklet only works once this table has been generated.
+"
+      
     </p>
     <p>
       <strong>3. Click the bookmarklet and WAIT.</strong>
-      TODO
+      When you click on the bookmarklet, it does a series of queries to Clarifai, and it takes time. After a while, once all queries have been answered, it aggregates a file and downloads it. <strong style="color:#D00">Click on the bookmarklet ONCE and WAIT until the data downloads.</strong> It takes time, it is normal. You can look <a href="https://webmasters.stackexchange.com/questions/8525/how-do-i-open-the-javascript-console-in-different-browsers" target="_blank">open the Javascript console</a> to take a look at the process.
     </p>
   </section>
   <hr>
@@ -108,6 +111,9 @@
   <section>
     <p>
       <a href="https://github.com/jacomyma/google-image-dmi-clarifai/blob/master/LICENSE">License: <strong>GPL v3.0</strong></a>. Based on <a href="https://wiki.digitalmethods.net/Dmi/ToolDatabase">DMI Tools</a>, <a href="https://medialab.github.io/artoo/">ARTOO</a>, and using the <a href="https://www.clarifai.com/">Clarifai</a> API.
+    </p>
+    <p>
+      Tool by <a href="https://twitter.com/jacomyma">Mathieu Jacomy</a> for the <a href="https://www.tantlab.aau.dk/">TANT Lab</a>. Fork the <a href="https://github.com/jacomyma/google-image-dmi-clarifai">source code</a> on GitHub.
     </p>
   </section>
 
