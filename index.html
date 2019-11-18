@@ -11,6 +11,20 @@
 <!-- Stylefewness from https://github.com/mblode/marx -->
 <link href="css/marx.min.css" rel="stylesheet">
 
+<style type="text/css">
+#bookmarklet-img {
+  max-width:200px;
+  border-radius: 100px;
+  transition: box-shadow .3s;
+  margin: 12px;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+#bookmarklet-img:hover {
+  box-shadow: 2px 2px 18px rgba(33,33,33,.6);
+}
+</style>
+
 </head>
 
 <body>
@@ -27,7 +41,7 @@
       When you type a query in <a href="https://images.google.com/">Google Image</a>, you get a list of images. This tool allows you downloading this list for any number of queries. And for each image on the list, it adds data from an image recognition service named <a href="https://www.clarifai.com/">Clarifai</a>. The Clarifai data uses machine learning to identify elements of the picture: objects, but also faces and their demographic attributes.
     </p>
     <p>
-      The tool requires a setup process, but once it is done the data can be gathered in one click. The setup can be fully done in this page. It requires you get a <a href="https://docs.clarifai.com/">Clarifai API key</a>, a personal identifier that allows you to get data from the Clarifai service. In the end it generates a <a href="https://en.wikipedia.org/wiki/Bookmarklet">bookmarklet</a>: a mini script embedded in a bookmark. To use it, you just have to type your query in <a href="https://tools.digitalmethods.net/beta/googleImages/">a certain page</a> and click on the bookmarklet to download the data.
+      The tool requires a <strong>setup process</strong>, but once it is done the data can be gathered in one click. The setup can be fully done in this page. It requires you get a <a href="https://docs.clarifai.com/">Clarifai API key</a>, a personal identifier that allows you to get data from the Clarifai service. In the end it generates a <a href="https://en.wikipedia.org/wiki/Bookmarklet">bookmarklet</a>: a mini script embedded in a bookmark. To use it, you just have to type your query in <a href="https://tools.digitalmethods.net/beta/googleImages/">a certain page</a> and <strong>click on the bookmarklet</strong> to download the data.
     </p>
   </section>
 
@@ -44,18 +58,34 @@
   </section>
 
   <section>
-    <h4>2. Set the tool options</h4>
+    <h4>2. Paste your Clarifai API Key below</h4>
     <p>
-      TODO
+      <input type="text" id="api-key-input">
     </p>
 
   </section>
 
   <section>
-    <h4>3. Generate the bookmarklet</h4>
+    <h4>3. Generate bookmarklet</h4>
     <p>
-      TODO
+      <button onclick="generate()">GENERATE</button>
     </p>
+    <div id="bookmarklet-container" style="padding: 24px 0px; display: none;">
+      <p>
+        <a id="bookmarklet-a"><img src="bookmarklet-image.png" id="bookmarklet-img"/></a>
+        <img src="bookmarklet-info.png" style="max-width:150px; margin-bottom:40px"/>
+      </p>
+      <p>
+        You must drag and drop the bookmarklet to your bookmark bar.
+      </p>
+      <p>
+        <u>If it is not visible:</u>
+        <br>
+        <strong>Google Chrome:</strong> use the menu <em>Bookmarks > Show Bookmarks Bar</em>
+        <br>
+        <strong>Firefox:</strong> follow <a href="https://support.mozilla.org/en-US/kb/bookmarks-toolbar-display-favorite-websites" target="_blank">these instructions</a>
+      </p>
+    </div>
   </section>
 
   <section>
@@ -82,6 +112,42 @@
   </section>
 
 </main>
+
+<script type="text/javascript">
+function generate() {
+  var apiKey = document.querySelector('#api-key-input').value
+  // 1. Check there is an API key
+  if (apiKey) {
+    readTextFile('script_template_artoo.js', function(code){
+      // 2. Insert the API in the bookmarklet code
+      code = code.replace('%%APIKEY%%', apiKey)
+      // 3. Display bookmarklet
+      displayBookmarklet(code)
+    })
+  } else {
+    alert("You need a Clarifai API KEY")
+  }
+}
+
+function displayBookmarklet(code) {
+  document.querySelector('#bookmarklet-container').style.display = 'initial'
+  document.querySelector('#bookmarklet-a').href = code
+}
+
+function readTextFile(file, callback) {
+  var rawFile = new XMLHttpRequest();
+  rawFile.open("GET", file, false);
+  rawFile.onreadystatechange = function(){
+    if(rawFile.readyState === 4) {
+      if(rawFile.status === 200 || rawFile.status == 0) {
+        var allText = rawFile.responseText;
+        callback(allText);
+      }
+    }
+  }
+  rawFile.send(null);
+}
+</script>
 
 </body>
 
