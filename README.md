@@ -1,5 +1,8 @@
-# google-image-dmi-clarifai
+# Google Image + DMI + Clarifai
 A tool to tag Google image queries with Clarifai
+
+## Use it online
+[https://jacomyma.github.io/google-image-dmi-clarifai/]
 
 ## How to use
 The tool is basically a web page. Serve it somewhere and you can use it.
