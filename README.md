@@ -1,4 +1,5 @@
 # Google Image + DMI + Clarifai
+**This tool was developed through funding received from the European Union’s Horizon 2020 research and innovation programme, under the TInnGO Project, Grant Agreement no. 824349**
 A tool to tag Google image queries with Clarifai.
 
 Use it online: https://jacomyma.github.io/google-image-dmi-clarifai/
