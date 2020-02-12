@@ -2,8 +2,29 @@ var settings = {}
 
 /// YOU CAN EDIT SETTINGS BELOW
 settings.apiKey = '%%APIKEY%%'
-settings.threshold_demographics = 0.5 // range [0, 1] - Applies to the DEMOGRAPHICS API
-settings.threshold_general = 0.9 // range [0, 1] - Applies to the GENERAL API
+settings.routes = [
+	{
+		name: 'GENERAL',
+		api: 'aaa03c23b3724a16a56b629203edc62c',
+		types: [
+			{
+				id: 'list-in-a-column',
+				threshold: 0.9
+			}
+		]
+	}, {
+		name: 'DEMOGRAPHICS',
+		api: 'c0c0ac362b03416da06ab3fa36fb58e3',
+		types: [
+			{
+				id: 'json-in-a-column'
+			},{
+				id: 'count-in-multiple-columns',
+				threshold: 0.5
+			}
+		]
+	}
+]
 /// END OF SETTINGS
 
 
@@ -30,7 +51,7 @@ artoo.scrapeTable('table', {
 			queue = newQueue(
 				table,
 				table.map(function(d){return d['thumbnail url']})
-					// .filter(function(d,i){return i<10}) // TODO: DISABLE ME
+					//.filter(function(d,i){return i<10}) // TODO: DISABLE ME
 			)
 			queue.nextBatch()
 		})
@@ -59,7 +80,11 @@ function newQueue(table, urls) {
 				while(i-->0 && this.urls.length>0) {
 					batch.push(this.urls.pop())
 				}
-				runClarifaiBatch(batch)
+				try {
+					runClarifaiBatch(batch)
+				} catch(e) {
+					notifyError(e, "Error while running Clarifai batch :(")
+				}
 			}
 		},
 		updateRow: function(url, o) {
@@ -71,7 +96,34 @@ function newQueue(table, urls) {
 	}
 }
 
-function runClarifaiBatch(urls) {
+function runClarifaiBatch(urls, r) {
+	if (r===undefined) { r = 0 }
+	if (r >= settings.routes.length) {
+		// All routes done
+		queue.nextBatch()
+	} else {
+		var route = settings.routes[r]
+		console.log('Querying Clarifai "'+route.name+'" API to enrich data...')
+		var call = app.models.predict(route.api,urls)
+		  .then(function(response){
+		  	console.log('...Clarifai responded...')
+		  	if (!response.outputs || response.outputs.length == 0) {
+		  		notifyError(undefined, "Clarifai response has no outputs")
+		  	} else {
+			    console.log('   (response has ' + response.outputs.length + ' outputs)...')
+			  	route.types.forEach(function(type){
+			  		parseResponse(response, type, route.name, urls)
+			  	})
+			  	runClarifaiBatch(urls, r+1)
+			  }
+		  })
+		  .catch(function(error){
+		  	notifyError(error, 'ARG, Something went wrong with the '+route.name+' api call')
+		  })
+	}
+	return
+
+	// TODO: remove below
 	// Query DEMOGRAPHICS API
 	console.log('Querying Clarifai "Demographics" API to enrich data...')
 	app.models.predict(
@@ -159,17 +211,67 @@ function runClarifaiBatch(urls) {
   })
 }
 
+function parseResponse(response, type, routeName, urls) {
+	console.log('...'+routeName+': Parse response as '+type.id+'...')
+	// Enrich the CSV with the response.
+  urls.forEach(function(url, i){
+  	var row = {}
+  	if (!response.outputs[i] || !response.outputs[i].data) {
+  		// console.log('  - Output ' + i + ' has no data')
+  	} else {
+    	var data = response.outputs[i].data
+  		// console.log(' - Output data', data)
+  		switch (type.id) {
+				
+				case 'json-in-a-column':
+					row[routeName+'-json'] = JSON.stringify(data)
+					break;
+
+				case 'list-in-a-column':
+					var concepts = {}
+					var scanConcepts = function(dataConcepts) {
+						dataConcepts
+		    			.filter(function(c){return c.value >= type.threshold})
+		    			.forEach(function(c){
+		    				concepts[c.name] = true
+		    			})
+					}
+					if (data && data.concepts) {
+		    		scanConcepts(data.concepts)
+		    	}
+		    	if (data && data.regions) {
+		    		data.regions.forEach(function(region){
+		    			if (region.data && region.data.concepts) {
+				    		scanConcepts(region.data.concepts)
+				    	}
+		    		})
+		    	}
+					row[routeName+'-concepts'] = Object.keys(concepts).join(", ")
+					break;
+				
+				case 'count-in-multiple-columns':
+					// TODO
+					break;
+			}
+  	}
+  	queue.updateRow(url, row)
+  })
+}
+
 // Error message
 function notifyError(error, msg){
 	ui.kill()
 	console.log(msg)
-	alert(msg + ' (see JS console for more details)')
 	if (error) {
-	  console.log('Error status code: ' + error.data['status']['code']);
-	  console.log('Error description: ' + error.data['status']['description']);
-	  if (error.data['status']['details'])
-	  {
-	    console.log('Error details: ' + error.data['status']['details']);
-	  }
+		console.error(error)
+		if(error.data) {
+		  console.log('Error status code: ' + error.data['status']['code']);
+		  console.log('Error description: ' + error.data['status']['description']);
+		  if (error.data['status']['details'])
+		  {
+		    console.log('Error details: ' + error.data['status']['details']);
+		  }
+		}
 	}
+	alert(msg + ' (see JS console for more details)')
 }
