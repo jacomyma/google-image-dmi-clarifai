@@ -9,6 +9,9 @@ settings.threshold_general = 0.9 // range [0, 1] - Applies to the GENERAL API
 
 /// MACHINERY
 
+// UI
+var ui = new artoo.ui();
+ui.$().append('<style>.container{position:fixed;top:0;left:0;padding:0:margin:0;width:100%;height:100%;background:rgba(255,255,255,0.9);} .inner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);}</style><div class="container"><div class="inner"><strong>PLEASE WAIT...</strong></div></div>');
 // Download the CSV from the DMI tool at https://tools.digitalmethods.net/beta/googleImages/
 var app, queue
 artoo.scrapeTable('table', {
@@ -27,7 +30,7 @@ artoo.scrapeTable('table', {
 			queue = newQueue(
 				table,
 				table.map(function(d){return d['thumbnail url']})
-					// .filter(function(d,i){return i<30})
+					// .filter(function(d,i){return i<10}) // TODO: DISABLE ME
 			)
 			queue.nextBatch()
 		})
@@ -48,6 +51,8 @@ function newQueue(table, urls) {
 				// Save the CSV
 		  	console.log("Download CSV")
 		  	artoo.saveCsv(Object.values(this.tableIndex))
+				ui.kill()
+				alert('Clarifai queries successful')
 			} else {
 				var i = batchSize
 				var batch = []
@@ -75,7 +80,7 @@ function runClarifaiBatch(urls) {
   .then(function(response){
   	console.log('...Clarifai responded.')
   	if (!response.outputs || response.outputs.length == 0) {
-  		console.error("Clarifai response has no outputs")
+  		notifyError(undefined, "Clarifai response has no outputs")
   	} else {
 	    console.log('Response has ' + response.outputs.length + ' outputs')
 
@@ -117,7 +122,7 @@ function runClarifaiBatch(urls) {
 		  .then(function(response){
 		  	console.log('...Clarifai responded.')
 		  	if (!response.outputs || response.outputs.length == 0) {
-		  		console.error("Clarifai response has no outputs")
+		  		notifyError(undefined, "Clarifai response has no outputs")
 		  	} else {
 			    console.log('Response has ' + response.outputs.length + ' outputs')
 
@@ -144,26 +149,27 @@ function runClarifaiBatch(urls) {
 
 		  })
 		  .catch(function(error){
-		  	console.log('Something went wrong with the GENERAL api call')
-		  	alert('Something went wrong with the GENERAL api call (see console for details)')
-		    console.log('Error status code: ' + error.data['status']['code']);
-		    console.log('Error description: ' + error.data['status']['description']);
-		    if (error.data['status']['details'])
-		    {
-		      console.log('Error details: ' + error.data['status']['details']);
-		    }
+		  	notifyError(error, 'Something went wrong with the GENERAL api call')
 		  })
   	}
 
   })
   .catch(function(error){
-  	console.log('Something went wrong with the DEMOGRAPHICS api call')
-  	alert('Something went wrong with the DEMOGRAPHICS api call (see console for details)')
-    console.log('Error status code: ' + error.data['status']['code']);
-    console.log('Error description: ' + error.data['status']['description']);
-    if (error.data['status']['details'])
-    {
-      console.log('Error details: ' + error.data['status']['details']);
-    }
+  	notifyError(error, 'Something went wrong with the DEMOGRAPHICS api call')
   })
+}
+
+// Error message
+function notifyError(error, msg){
+	ui.kill()
+	console.log(msg)
+	alert(msg + ' (see JS console for more details)')
+	if (error) {
+	  console.log('Error status code: ' + error.data['status']['code']);
+	  console.log('Error description: ' + error.data['status']['description']);
+	  if (error.data['status']['details'])
+	  {
+	    console.log('Error details: ' + error.data['status']['details']);
+	  }
+	}
 }
