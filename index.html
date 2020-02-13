@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<title>Google Images + Clarifai</title>
+<title>G. Images 2 Clarifai</title>
 
 <!-- Stylefewness from https://github.com/mblode/marx -->
 <link href="css/marx.min.css" rel="stylesheet">
@@ -23,20 +23,674 @@
 #bookmarklet-img:hover {
   box-shadow: 2px 2px 18px rgba(33,33,33,.6);
 }
+code {
+  background-color: #d0d8de;
+  padding: 0px 3px;
+}
+/* Collapsible settings */
+.collapsible {
+  background-color: #e7ebef;
+  color: #444;
+  cursor: pointer;
+  padding: 6px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+}
+.active, .collapsible:hover {
+  background-color: #ccc;
+}
+.collapsible-content {
+  display: none;
+  overflow: hidden;
+}
+.collapsible:after {
+  content: '\02795'; /* Unicode character for "plus" sign (+) */
+  font-size: 13px;
+  color: white;
+  float: right;
+  margin-left: 5px;
+}
+.active:after {
+  content: "\2796"; /* Unicode character for "minus" sign (-) */
+}
 </style>
 
 </head>
 
-<body>
+<body style="background-color: #f0f6fd">
 
 <main>
 
   <section>
-    <h1>Google Images + Clarifai tags</h1>
+    <h1>DMI Google Image Scraper to Clarifai Tags</h1>
+    <p>
+      <strong>Tag images from Google queries using the Clarifai service.</strong>
+    </p>
+    <ul>
+      <li>Uses the <a href="https://tools.digitalmethods.net/beta/googleImages/" target="_blank">DMI Google Image Scraper</a></li>
+      <li>Requires an <a href="#clarifai-how-to">API key from Clarifai</a></li>
+      <li>Works as a <a href="https://en.wikipedia.org/wiki/Bookmarklet" target="_blank">bookmarklet</a></li>
+      <li>Downloads a CSV</li>
+    </ul>
+  </section>
+
+  <section id="generate-bookmarklet" style="background-color: #FFF; padding: 24px; margin-top:12px;">
+    <h2 style="margin-top: 0px"><span class="bookmarklet-setup">GENERATE </span>BOOKMARKLET</h2>
+    <button type="button" class="collapsible">Show settings</button>
+    <div class="collapsible-content">
+      <a href="#bookmarklet-settings-info">How to use settings</a>
+      <table class="bookmarklet-setup">
+        <tr>
+          <td>
+            <strong>Tagging algorithm (model)</strong><br><a href="#clarifai-algos">more info</a>
+          </td>
+          <th>
+            Confidence<br>threshold
+          </th>
+          <th style="width:100px;">
+            tags as list
+          </th>
+          <th style="width:100px;">
+            tags as columns
+          </th>
+          <th style="width:100px;">
+            raw JSON
+          </th>
+        </tr>
+
+        <!-- ALGO: general -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-general"
+                onclick="toggleAlgoSetting('general')"
+                checked
+              >
+              GENERAL
+            </label>
+            <br>
+            <small>General purpose model.</small>
+          </td>
+          <td>
+            <input class="algo-setting-general"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="general-threshold"
+              style="width:80px"
+              value="0.9"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-general">
+              <input
+                type="checkbox"
+                id="general-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-general">
+              <input
+                type="checkbox"
+                id="general-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-general">
+              <input
+                type="checkbox"
+                id="general-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: apparel -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-apparel"
+                onclick="toggleAlgoSetting('apparel')"
+              >
+              Apparel
+            </label>
+            <br>
+            <small>Recognizes fashion-related items.</small>
+          </td>
+          <td>
+            <input class="algo-setting-apparel"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="apparel-threshold"
+              style="width:80px; display:none"
+              value="0.5"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-apparel" style="display:none">
+              <input
+                type="checkbox"
+                id="apparel-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-apparel" style="display:none">
+              <input
+                type="checkbox"
+                id="apparel-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-apparel" style="display:none">
+              <input
+                type="checkbox"
+                id="apparel-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: celebrity -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-celebrity"
+                onclick="toggleAlgoSetting('celebrity')"
+              >
+              Celebrity
+            </label>
+            <br>
+            <small>Celebrities resembling detected faces.</small>
+          </td>
+          <td>
+            <input class="algo-setting-celebrity"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="celebrity-threshold"
+              style="width:80px; display:none;"
+              value="0.5"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-celebrity" style="display:none">
+              <input
+                type="checkbox"
+                id="celebrity-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-celebrity" style="display:none">
+              <input
+                type="checkbox"
+                id="celebrity-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-celebrity" style="display:none">
+              <input
+                type="checkbox"
+                id="celebrity-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: demographics -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-demographics"
+                onclick="toggleAlgoSetting('demographics')"
+              >
+              Demographics
+            </label>
+            <br>
+            <small>Age, gender, ethnic group of found faces.</small>
+          </td>
+          <td>
+            <input class="algo-setting-demographics"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="demographics-threshold"
+              style="width:80px; display: none;"
+              value="0.5"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-demographics" style="display: none;">
+              <input
+                type="checkbox"
+                id="demographics-list"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-demographics" style="display: none;">
+              <input
+                type="checkbox"
+                id="demographics-col"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-demographics" style="display: none;">
+              <input
+                type="checkbox"
+                id="demographics-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: food -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-food"
+                onclick="toggleAlgoSetting('food')"
+              >
+              Food
+            </label>
+            <br>
+            <small>Recognizes food items and dishes.</small>
+          </td>
+          <td>
+            <input class="algo-setting-food"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="food-threshold"
+              style="width:80px; display:none;"
+              value="0.9"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-food" style="display:none">
+              <input
+                type="checkbox"
+                id="food-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-food" style="display:none">
+              <input
+                type="checkbox"
+                id="food-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-food" style="display:none">
+              <input
+                type="checkbox"
+                id="food-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: moderation -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-moderation"
+                onclick="toggleAlgoSetting('moderation')"
+              >
+              Moderation
+            </label>
+            <br>
+            <small>Detects unwanted content: gore, nudity...</small>
+          </td>
+          <td>
+            <input class="algo-setting-moderation"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="moderation-threshold"
+              style="width:80px; display:none;"
+              value="0.5"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-moderation" style="display:none">
+              <input
+                type="checkbox"
+                id="moderation-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-moderation" style="display:none">
+              <input
+                type="checkbox"
+                id="moderation-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-moderation" style="display:none">
+              <input
+                type="checkbox"
+                id="moderation-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: nsfw -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-nsfw"
+                onclick="toggleAlgoSetting('nsfw')"
+              >
+              NSFW
+            </label>
+            <br>
+            <small>Identifies nudity ("Not Safe For Work").</small>
+          </td>
+          <td>
+            <input class="algo-setting-nsfw"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="nsfw-threshold"
+              style="width:80px; display:none;"
+              value="0.5"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-nsfw" style="display:none">
+              <input
+                type="checkbox"
+                id="nsfw-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-nsfw" style="display:none">
+              <input
+                type="checkbox"
+                id="nsfw-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-nsfw" style="display:none">
+              <input
+                type="checkbox"
+                id="nsfw-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: patterns -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-patterns"
+                onclick="toggleAlgoSetting('patterns')"
+              >
+              Textures and patterns
+            </label>
+            <br>
+            <small>Recognizes common visual patterns.</small>
+          </td>
+          <td>
+            <input class="algo-setting-patterns"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="patterns-threshold"
+              style="width:80px; display:none;"
+              value="0.5"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-patterns" style="display:none">
+              <input
+                type="checkbox"
+                id="patterns-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-patterns" style="display:none">
+              <input
+                type="checkbox"
+                id="patterns-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-patterns" style="display:none">
+              <input
+                type="checkbox"
+                id="patterns-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: travel -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-travel"
+                onclick="toggleAlgoSetting('travel')"
+              >
+              Travel
+            </label>
+            <br>
+            <small>Travel and hospitality-related concepts.</small>
+          </td>
+          <td>
+            <input class="algo-setting-travel"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="travel-threshold"
+              style="width:80px; display:none;"
+              value="0.5"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-travel" style="display:none">
+              <input
+                type="checkbox"
+                id="travel-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-travel" style="display:none">
+              <input
+                type="checkbox"
+                id="travel-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-travel" style="display:none">
+              <input
+                type="checkbox"
+                id="travel-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+        <!-- ALGO: wedding -->
+        <tr>
+          <td>
+            <label>
+              <input
+                type="checkbox"
+                id="algo-wedding"
+                onclick="toggleAlgoSetting('wedding')"
+              >
+              Wedding
+            </label>
+            <br>
+            <small>Wedding-related concepts.</small>
+          </td>
+          <td>
+            <input class="algo-setting-wedding"
+              type="number"
+              min="0.00"
+              max="1.00"
+              step="0.01"
+              id="wedding-threshold"
+              style="width:80px; display:none;"
+              value="0.5"
+            >
+          </td>
+          <td>
+            <label class="algo-setting-wedding" style="display:none">
+              <input
+                type="checkbox"
+                id="wedding-list"
+                checked
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-wedding" style="display:none">
+              <input
+                type="checkbox"
+                id="wedding-col"
+              >
+            </label>
+          </td>
+          <td>
+            <label class="algo-setting-wedding" style="display:none">
+              <input
+                type="checkbox"
+                id="wedding-json"
+              >
+            </label>
+          </td>
+        </tr>
+
+      </table>
+    </div>
+
+
+    <p class="bookmarklet-setup">
+      <input
+        type="text"
+        id="api-key-input"
+        placeholder="Paste your Clarifai API key here"
+        style="width:300px"
+      >
+      <button onclick="generate()">GENERATE</button>
+      <br>
+      <a href="#clarifai-how-to">How to get a Clarifai API key?</a>
+    </p>
+    <div id="bookmarklet-container" style="padding: 24px 0px; display: none;">
+      <p>
+        <a id="bookmarklet-a"><img src="bookmarklet-image.png" id="bookmarklet-img" alt="G.Img2Clarifai"/></a>
+        <img src="bookmarklet-info.png" style="max-width:150px; margin-bottom:40px"/>
+      </p>
+      <p>
+        <strong style="color:#D00">Now drag and drop the bookmarklet into your bookmark bar.</strong>
+      </p>
+      <p>
+        If your bookmark bar is not visible:
+        <ul>
+          <li style="margin-bottom: 12px">
+            <strong>Chrome:</strong>
+            <br>use <em>Menu > Bookmarks > Show Bookmarks Bar</em>
+            <br>or follow <a href="https://www.wikihow.com/Display-Bookmarks-in-Chrome" target="_blank">these instructions</a>
+          </li>
+          <li style="margin-bottom: 12px">
+            <strong>Firefox:</strong>
+            <br>use <em>Menu > Customize... > Toobars ></em> click <em>Bookmarks Toolbar</em> to select it
+            <br>or follow <a href="https://support.mozilla.org/en-US/kb/bookmarks-toolbar-display-favorite-websites" target="_blank">these instructions</a>
+          </li>
+          <li style="margin-bottom: 12px">
+            <strong>Safari:</strong>
+            <br>use <em>View > Show Favorites Bar</em>
+            <br>or follow <a href="https://support.apple.com/guide/safari/customize-the-safari-window-ibrw1012/mac" target="_blank">these instructions</a>
+          </li>
+        </ul>
+      </p>
+    </div>
   </section>
 
   <section>
-    <h4>What is this tool?</h4>
+    <h2>HOW TO USE</h2>
+    <p>
+      <strong>1. Browse to the <a href="https://tools.digitalmethods.net/beta/googleImages/" target="_blank">DMI Google Image Scraper</a>.</strong>
+      This tool simplifies the querying of Google Images.
+    </p>
+    <p>
+      <strong>2. Enter your query</strong> in the field titled "Key words", or follow <a href="https://wiki.digitalmethods.net/Dmi/ToolGoogleImagesScraper" target="_blank">instructions</a>.
+    </p>
+    <p>
+      <strong>3. Click the bookmarklet and WAIT.</strong>
+      Here your browser connects to Clarifai to tag the images.
+      It takes some time; a CSV file will download when the tagging is done. <a href="https://webmasters.stackexchange.com/questions/8525/how-do-i-open-the-javascript-console-in-different-browsers" target="_blank">Open the Javascript console</a> for more detailed information during the process.
+    </p>
+    <hr>
+  </section>
+
+  <section>
+    <h2>HELP</h2>
+  </section>
+
+  <section>
+    <h3>What is the purpose tool?</h3>
     <p>
       When you type a query in <a href="https://images.google.com/" target="_blank">Google Image</a>, you get a list of images. This tool allows you downloading this list for any number of queries. And for each image on the list, it adds data from an image recognition service named <a href="https://www.clarifai.com/" target="_blank">Clarifai</a>. The Clarifai data uses machine learning to identify elements of the picture: objects, but also faces and their demographic attributes.
     </p>
@@ -46,13 +700,9 @@
   </section>
 
   <section>
-    <h2>Setup process</h2>
-  </section>
-
-  <section>
-    <h4>1. Get a Clarifai API Key</h4>
+    <h3 id="clarifai-how-to">How to get a Clarifai API Key</h3>
     <p>
-      <strong><a href="https://portal.clarifai.com/signup" target="_blank">Sign up to Clarifai to get your API key.</a></strong> Just follow the instructions. It does not require any payment or card number. But beyond the first 5000 images per month, it will stop working unless you start paying for it.
+      <strong><a href="https://portal.clarifai.com/signup" target="_blank">Sign up to Clarifai to get your API key.</a></strong> Just follow the instructions. It does not require any payment or card number. But beyond the first 5000 images per month, it will stop working unless you pay for it.
     </p>
     <p>
       <strong>Why an API key?</strong> Clarifai tags your images with machine learning techniques. You send it images via the web and it responds with tags. The "API" is the door to the service: it has both an address and a lock that requires a key. The key is personal, and Clarifai uses it to monitor your use. Indeed the service is only free up to 5000 images a month. This tool knows where the address is, but you need to tell it your key. The resulting bookmarklet will only visible to you, so no one will get your API key. You can go to Clarifai to know how many of your monthly free queries are used.
@@ -60,51 +710,232 @@
   </section>
 
   <section>
-    <h4>2. Paste your Clarifai API Key below</h4>
+    <h3 id="bookmarklet-settings-info">How to use the settings?</h3>
     <p>
-      <input type="text" id="api-key-input">
+      <strong>Pick the tagging model(s) relevant to you</strong>. See <a href="#clarifai-algos">list below</a>. The bookmarklet you generate will use the specified Clarify models and data formats.
     </p>
-
+    <p>
+      <strong>Each model you use spends an API call per image tagged</strong> so the more models you use, the faster you reach the limit of 5000 free API calls per month. <em>Example: you use 3 models, and you tag 100 images. It uses 300 API calls each time you run the bookmarklet.</em>
+    </p>
+    <p>
+      <strong>Three data formats are available</strong>. Each corresponds to a different need, and you can pick multiple. Two of them require a <strong>threshold</strong>, a number between 0 and 1 that you can set.
+    </p>
+    <p>
+      <strong>1. Tags as list.</strong> The easiest data format. Concepts with a confidence score above the specified threshold will appear as a list of tags in a single column. Example:
+    </p>
+    <table>
+      <tr>
+        <th>Image</th>
+        <th>Concepts</th>
+      </tr>
+      <tr>
+        <td>A</td>
+        <td>fashion, business, leather</td>
+      </tr>
+      <tr>
+        <td>B</td>
+        <td>leather, retro</td>
+      </tr>
+      <tr>
+        <td>C</td>
+        <td>business, retro, coffee, shopping</td>
+      </tr>
+    </table>
+    <p>
+      <strong>2. Tags as columns.</strong> Quite easy but more rich. Concepts with a confidence score above the specified threshold will appear in multiple column. Each tag has its own column. Example:
+    </p>
+    <table>
+      <tr>
+        <th>Image</th>
+        <th>Fashion</th>
+        <th>Business</th>
+        <th>Leather</th>
+        <th>Retro</th>
+        <th>Coffee</th>
+        <th>Shopping</th>
+      </tr>
+      <tr>
+        <td>A</td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>B</td>
+        <td></td>
+        <td></td>
+        <td>1</td>
+        <td>1</td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>C</td>
+        <td></td>
+        <td>1</td>
+        <td></td>
+        <td>1</td>
+        <td>1</td>
+        <td>1</td>
+      </tr>
+    </table>
+    <p>
+      <em>Important note: <strong>"tags as columns" can count multiple tags</strong> for a same image. This happens for models that can recognize multiple items per image. For instance the model "Demographics" can find multiple faces in a single image, and tag them all. If you have three feminine faces in an image, the column "feminine" will have the value "3" for that image.</em>
+    </p>
+    <p>
+      <strong>3. Raw JSON.</strong> This format is the harder to use but the most complete. It will simply store the information answered by Clarifai in a single column. The data is formated as a JSON, structured as a tree. It is therefore very hard to use in a spreadsheet, but easy to use in a script; but it is a good way to log the results for further use. <em>Note: it also contains concepts under the confidence threshold.</em> Example:
+    </p>
+    <table>
+      <tr>
+        <th>Image</th>
+        <th>Concepts</th>
+      </tr>
+      <tr>
+        <td>A</td>
+        <td style="text-align: left">
+<pre>{"concepts": [
+  {"id": "ai_GC6FB0cQ", "name": "fashion",  "value": 0.99863684},
+  {"id": "ai_fBH5DFMJ", "name": "business", "value": 0.9962599},
+  {"id": "ai_2KV5G1Fg", "name": "leather",  "value": 0.97945905},
+  {"id": "ai_XN1QLhwp", "name": "retro",    "value": 0.27526324},
+  {"id": "ai_KWmFf1fn", "name": "coffee",   "value": 0.1743866},
+  {"id": "ai_KWmFf1fn", "name": "unicorn",  "value": 0.0054384}
+]}</pre>
+        </td>
+      </tr>
+    </table>
   </section>
 
   <section>
-    <h4>3. Generate bookmarklet</h4>
+    <h3 id="clarifai-algos">What are the different algorithms available?</h3>
     <p>
-      <button onclick="generate()">GENERATE</button>
+      Clarifai proposes multiple algorithms, or "models". Each is trained differently, and recognizes different concepts. Some are more specialized (<a href="https://www.clarifai.com/models/nsfw-image-recognition-model-e9576d86d2004ed1a38ba0cf39ecb4b1" target="_blank">NSFW</a> tells if an image is "safe for work" or not) than others (<a href="https://www.clarifai.com/models/general-image-recognition-model-aaa03c23b3724a16a56b629203edc62c" target="_blank">General</a> recognizes a wide variety of concepts).
     </p>
-    <div id="bookmarklet-container" style="padding: 24px 0px; display: none;">
-      <p>
-        <a id="bookmarklet-a"><img src="bookmarklet-image.png" id="bookmarklet-img"/></a>
-        <img src="bookmarklet-info.png" style="max-width:150px; margin-bottom:40px"/>
-      </p>
-      <p>
-        You must drag and drop the bookmarklet to your bookmark bar.
-      </p>
-      <p>
-        <u>If it is not visible:</u>
-        <br>
-        <strong>Google Chrome:</strong> use the menu <em>Bookmarks > Show Bookmarks Bar</em>
-        <br>
-        <strong>Firefox:</strong> follow <a href="https://support.mozilla.org/en-US/kb/bookmarks-toolbar-display-favorite-websites" target="_blank">these instructions</a>
-      </p>
-    </div>
+    <p>
+      Refer to the <strong><a href="https://www.clarifai.com/models" target="_blank">Clarify Model Gallery</a></strong> for complete information, or look at the summary below.
+    </p>
+    <p>
+      <strong>GENERAL.</strong>
+      General purpose model. Recognizes over 11,000 different concepts.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>Afternoon</code>
+      <code>Art</code>
+      <code>Beautiful</code>
+      <code>Bicycle</code>
+      <code>Happiness</code>
+      <code>Togetherness</code>
+    </p>
+    <p>
+      <strong>Apparel.</strong>
+      Recognizes fashion-related items.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>Blouse</code>
+      <code>Bracelet</code>
+      <code>Casual Dress</code>
+      <code>Fleece Jacket</code>
+      <code>Loafers</code>
+      <code>Pant Suit</code>
+    </p>
+    <p>
+      <strong>Celebrity.</strong>
+      Identifies celebrities resembling detected faces.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>Marilyn Monroe</code>
+      <code>Ice Cube</code>
+      <code>Jennifer Lopez</code>
+      <code>Angelina Jolie</code>
+      <code>Jake Gyllenhaal</code>
+    </p>
+    <p>
+      <strong>Demographics.</strong>
+      Predicts the age, gender, and cultural appearance of detected faces.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>18</code>
+      <code>94</code>
+      <code>feminine</code>
+      <code>masculine</code>
+      <code>asian</code>
+      <code>black or african american</code>
+    </p>
+    <p>
+      <strong>Food.</strong>
+      Recognizes food items and dishes.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>Apple</code>
+      <code>Avocado</code>
+      <code>Bread</code>
+      <code>Ice Cream</code>
+      <code>Sandwich</code>
+      <code>Steak</code>
+    </p>
+    <p>
+      <strong>Moderation.</strong>
+      Recognizes unwanted content: gore, drugs, nudity.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>Gore</code>
+      <code>Drug</code>
+      <code>Explicit</code>
+      <code>Suggestive</code>
+      <code>Safe</code>
+    </p>
+    <p>
+      <strong>NSFW</strong> (Not Safe For Work).
+      Identifies nudity: "safe for work" or "not safe for work".
+      <br>
+      <em>It uses only two concepts:</em>
+      <code>NSFW (Not Safe For Work)</code>
+      <code>SFW (Safe For Work)</code>
+    </p>
+    <p>
+      <strong>Textures and patterns.</strong>
+      Recognizes common visual patterns.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>feathers</code>
+      <code>woodgrain</code>
+      <code>petrified wood</code>
+      <code>glacial ice</code>
+      <code>veined</code>
+      <code>metallic</code>
+    </p>
+    <p>
+      <strong>Travel.</strong>
+      Travel and hospitality-related concepts.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>Balcony</code>
+      <code>Beach</code>
+      <code>Breakfast Buffet</code>
+      <code>Casino</code>
+      <code>Kids Area</code>
+      <code>Restaurant</code>
+    </p>
+    <p>
+      <strong>Wedding.</strong>
+      Wedding-related concepts.
+      <br>
+      <em>Examples of concepts:</em>
+      <code>Bouquet</code>
+      <code>Bride</code>
+      <code>Cake</code>
+      <code>Ceremony</code>
+      <code>Flowers</code>
+      <code>Groom</code>
+    </p>
   </section>
 
-  <section>
-    <h2>How to use</h2>
-    <p>
-      <strong>1. Browse to the <a href="https://tools.digitalmethods.net/beta/googleImages/" target="_blank">DMI Google Image Scraper</a>.</strong>
-      This tool simplifies the querying of Google Images.
-    </p>
-    <p>
-      <strong>2. Type your query and WAIT.</strong> The Image Scraper has <a href="https://wiki.digitalmethods.net/Dmi/ToolGoogleImagesScraper" target="_blank">documentation</a> but basically, type one or more words in the field <em>Key words (separated by commas)</em> and click on <em>Scrape Images</em>. Then <strong style="color:#D00">wait until the table has appeared on the bottom of the page</strong>. The bookmarklet only works once this table has been generated.      
-    </p>
-    <p>
-      <strong>3. Click the bookmarklet and WAIT.</strong>
-      When you click on the bookmarklet, it does a series of queries to Clarifai, and it takes time. After a while, once all queries have been answered, it aggregates a file and downloads it. <strong style="color:#D00">Click on the bookmarklet ONCE and WAIT until the data downloads.</strong> It takes time, it is normal. You can look <a href="https://webmasters.stackexchange.com/questions/8525/how-do-i-open-the-javascript-console-in-different-browsers" target="_blank">open the Javascript console</a> to take a look at the process.
-    </p>
-  </section>
-  <hr>
+</main>
+
+<footer style="margin-top: 48px">
 
   <section>
     <p>
@@ -113,21 +944,108 @@
     <p>
       Tool by <a href="https://twitter.com/jacomyma" target="_blank">Mathieu Jacomy</a> for the <a href="https://www.tantlab.aau.dk/" target="_blank">TANT Lab</a>. Fork the <a href="https://github.com/jacomyma/google-image-dmi-clarifai" target="_blank">source code</a> on GitHub.
     </p>
-    <p><em>This tool was developed through funding received from the European Union’s Horizon 2020 research and innovation programme, under the <a href="https://www.tinngo.eu/" target="_blank">TInnGO Project</a>, Grant Agreement no. 824349</em></p>
+    <p><em>
+      This tool was developed through funding received from the European Union’s
+      <br>Horizon 2020 research and innovation programme,
+      <br>under the <a href="https://www.tinngo.eu/" target="_blank">TInnGO Project</a>, Grant Agreement no. 824349
+    </em></p>
   </section>
-
-</main>
+  
+</footer>
 
 <script type="text/javascript">
+var clarifaiAlgorithms = [
+  {
+    id: 'general',
+    name: 'GENERAL',
+    api: 'aaa03c23b3724a16a56b629203edc62c'
+  },
+  {
+    id: 'apparel',
+    name: 'APPAREL',
+    api: 'e0be3b9d6a454f0493ac3a30784001ff'
+  },
+  {
+    id: 'celebrity',
+    name: 'CELEBRITY',
+    api: 'e466caa0619f444ab97497640cefc4dc'
+  },
+  {
+    id: 'demographics',
+    name: 'DEMOGRAPHICS',
+    api: 'c0c0ac362b03416da06ab3fa36fb58e3'
+  },
+  {
+    id: 'food',
+    name: 'FOOD',
+    api: 'bd367be194cf45149e75f01d59f77ba7'
+  },
+  {
+    id: 'moderation',
+    name: 'MODERATION',
+    api: 'd16f390eb32cad478c7ae150069bd2c6'
+  },
+  {
+    id: 'nsfw',
+    name: 'NSFW',
+    api: 'e9576d86d2004ed1a38ba0cf39ecb4b1'
+  },
+  {
+    id: 'patterns',
+    name: 'PATTERNS',
+    api: 'fbefb47f9fdb410e8ce14f24f54b47ff'
+  },
+  {
+    id: 'travel',
+    name: 'TRAVEL',
+    api: 'eee28c313d69466f836ab83287a54ed9'
+  },
+  {
+    id: 'wedding',
+    name: 'WEDDING',
+    api: 'c386b7a870114f4a87477c0824499348'
+  }
+]
 function generate() {
   var apiKey = document.querySelector('#api-key-input').value
+  var routes = clarifaiAlgorithms
+    .filter(algo=>document.getElementById('algo-'+algo.id).checked)
+    .map(algo=>{
+        algo.types = []
+        if (document.getElementById(algo.id+'-list').checked) {
+          algo.types.push({
+            id: 'list-in-a-column',
+            threshold: +document.getElementById(algo.id+'-threshold').value
+          })
+        }
+        if (document.getElementById(algo.id+'-col').checked) {
+          algo.types.push({
+            id: 'count-in-multiple-columns',
+            threshold: +document.getElementById(algo.id+'-threshold').value
+          })
+        }
+        if (document.getElementById(algo.id+'-json').checked) {
+          algo.types.push({
+            id: 'json-in-a-column'
+          })
+        }
+        return algo
+      })
   // 1. Check there is an API key
   if (apiKey) {
     readTextFile('script_template_artoo.js', function(code){
+
       // 2. Insert the API in the bookmarklet code
       code = code.replace('%%APIKEY%%', apiKey)
-      // 3. Display bookmarklet
+      
+      // 3. Insert algorithms settings
+      var txtRoutes = JSON.stringify(routes).replace(/"/g, '\\\\\\\\\\\\"')
+      code = code.replace('%%ROUTES%%', txtRoutes)
+      console.log('routes', routes)
+
+      // 4. Display bookmarklet
       displayBookmarklet(code)
+      jump('generate-bookmarklet')
     })
   } else {
     alert("You need a Clarifai API KEY")
@@ -135,6 +1053,7 @@ function generate() {
 }
 
 function displayBookmarklet(code) {
+  document.querySelectorAll('.bookmarklet-setup').forEach(d=>{d.style.display = 'none'})
   document.querySelector('#bookmarklet-container').style.display = 'initial'
   document.querySelector('#bookmarklet-a').href = code
 }
@@ -151,6 +1070,37 @@ function readTextFile(file, callback) {
     }
   }
   rawFile.send(null);
+}
+
+function toggleAlgoSetting(algo) {
+  var checked = document.getElementById('algo-'+algo).checked
+  if (checked) {
+    document.querySelectorAll('.algo-setting-'+algo).forEach(d=>{d.style.display='initial'})
+  } else {
+    document.querySelectorAll('.algo-setting-'+algo).forEach(d=>{d.style.display='none'})
+  }
+}
+
+function jump(h){
+  var url = location.href;               //Save down the URL without hash.
+  location.href = "#"+h;                 //Go to the target element.
+  history.replaceState(null,null,url);   //Don't like hashes. Changing it back.
+}
+
+
+// Collapsible settings panel
+var coll = document.getElementsByClassName("collapsible");
+var i;
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.display === "block") {
+      content.style.display = "none";
+    } else {
+      content.style.display = "block";
+    }
+  });
 }
 </script>
 
