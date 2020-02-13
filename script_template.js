@@ -2,34 +2,16 @@ var settings = {}
 
 /// YOU CAN EDIT SETTINGS BELOW
 settings.apiKey = '%%APIKEY%%'
-settings.routes = [
-	{
-		name: 'GENERAL',
-		api: 'aaa03c23b3724a16a56b629203edc62c',
-		types: [
-			{
-				id: 'list-in-a-column',
-				threshold: 0.9
-			}
-		]
-	}, {
-		name: 'DEMOGRAPHICS',
-		api: 'c0c0ac362b03416da06ab3fa36fb58e3',
-		types: [
-			{
-				id: 'list-in-a-column',
-				threshold: 0.5
-			},{
-				id: 'count-in-multiple-columns',
-				threshold: 0.5
-			}
-		]
-	}
-]
+settings.routes = '%%ROUTES%%'
 /// END OF SETTINGS
 
 
 /// MACHINERY
+
+// Unstringify routes
+console.log('Routes before Unstringify:', settings.routes)
+settings.routes = JSON.parse(settings.routes)
+console.log('Routes after Unstringify:', settings.routes)
 
 // UI
 var ui = new artoo.ui();
