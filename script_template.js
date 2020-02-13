@@ -17,7 +17,8 @@ settings.routes = [
 		api: 'c0c0ac362b03416da06ab3fa36fb58e3',
 		types: [
 			{
-				id: 'json-in-a-column'
+				id: 'list-in-a-column',
+				threshold: 0.5
 			},{
 				id: 'count-in-multiple-columns',
 				threshold: 0.5
@@ -51,7 +52,7 @@ artoo.scrapeTable('table', {
 			queue = newQueue(
 				table,
 				table.map(function(d){return d['thumbnail url']})
-					//.filter(function(d,i){return i<10}) // TODO: DISABLE ME
+					// .filter(function(d,i){return i<10}) // TODO: DISABLE ME
 			)
 			queue.nextBatch()
 		})
@@ -121,94 +122,6 @@ function runClarifaiBatch(urls, r) {
 		  	notifyError(error, 'ARG, Something went wrong with the '+route.name+' api call')
 		  })
 	}
-	return
-
-	// TODO: remove below
-	// Query DEMOGRAPHICS API
-	console.log('Querying Clarifai "Demographics" API to enrich data...')
-	app.models.predict(
-    'c0c0ac362b03416da06ab3fa36fb58e3', // Demographics API
-    urls)
-  .then(function(response){
-  	console.log('...Clarifai responded.')
-  	if (!response.outputs || response.outputs.length == 0) {
-  		notifyError(undefined, "Clarifai response has no outputs")
-  	} else {
-	    console.log('Response has ' + response.outputs.length + ' outputs')
-
-	    // Enrich the CSV with the response.
-	    urls.forEach(function(url, i){
-	    	var row={}
-	    	if (!response.outputs[i] || !response.outputs[i].data) {
-	    		// console.log('  - Output ' + i + ' has no data')
-	    	} else {
-		    	var data = response.outputs[i].data
-		    	if (data && data.regions) {
-		    		data.regions.forEach(function(region){
-		    			var face = region.data.face
-		    			if (face && face.gender_appearance) {
-		    				face.gender_appearance.concepts.forEach(function(concept){
-		    					if (concept.value >= settings.threshold_demographics) {
-		    						row[concept.name] = (row[concept.name] || 0) + 1
-		    					}
-		    				})
-		    			}
-		    			if (face && face.multicultural_appearance) {
-		    				face.multicultural_appearance.concepts.forEach(function(concept){
-		    					if (concept.value >= settings.threshold_demographics) {
-		    						row[concept.name] = (row[concept.name] || 0) + 1
-		    					}
-		    				})
-		    			}
-		    		})
-		    	}
-	    	}
-	    	queue.updateRow(url, row)
-	    })
-	    
-	    // Query GENERAL API
-			console.log('Querying Clarifai "General" API to enrich data...')
-			app.models.predict(
-		    'aaa03c23b3724a16a56b629203edc62c', // General API
-		    urls)
-		  .then(function(response){
-		  	console.log('...Clarifai responded.')
-		  	if (!response.outputs || response.outputs.length == 0) {
-		  		notifyError(undefined, "Clarifai response has no outputs")
-		  	} else {
-			    console.log('Response has ' + response.outputs.length + ' outputs')
-
-			    // Enrich the CSV with the response.
-			    urls.forEach(function(url, i){
-			    	var row = {}
-			    	if (!response.outputs[i] || !response.outputs[i].data) {
-			    		// console.log('  - Output ' + i + ' has no data')
-			    	} else {
-				    	var data = response.outputs[i].data
-			    		// console.log(' - Output data', data)
-				    	if (data && data.concepts) {
-				    		row["general concepts"] = data.concepts
-				    			.filter(function(c){return c.value >= settings.threshold_general})
-				    			.map(function(c){return c.name})
-				    			.join(", ")
-				    	}
-			    	}
-			    	queue.updateRow(url, row)
-			    })
-			    
-			  	queue.nextBatch()
-		  	}
-
-		  })
-		  .catch(function(error){
-		  	notifyError(error, 'Something went wrong with the GENERAL api call')
-		  })
-  	}
-
-  })
-  .catch(function(error){
-  	notifyError(error, 'Something went wrong with the DEMOGRAPHICS api call')
-  })
 }
 
 function parseResponse(response, type, routeName, urls) {
@@ -250,7 +163,27 @@ function parseResponse(response, type, routeName, urls) {
 					break;
 				
 				case 'count-in-multiple-columns':
-					// TODO
+					var concepts = {}
+					var scanConcepts = function(dataConcepts) {
+						dataConcepts
+		    			.filter(function(c){return c.value >= type.threshold})
+		    			.forEach(function(c){
+		    				concepts[c.name] = (concepts[c.name] || 0) + 1
+		    			})
+					}
+					if (data && data.concepts) {
+		    		scanConcepts(data.concepts)
+		    	}
+		    	if (data && data.regions) {
+		    		data.regions.forEach(function(region){
+		    			if (region.data && region.data.concepts) {
+				    		scanConcepts(region.data.concepts)
+				    	}
+		    		})
+		    	}
+					for(c in concepts){
+						row[c] = concepts[c]
+					}
 					break;
 			}
   	}
