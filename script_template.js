@@ -9,13 +9,15 @@ settings.routes = '%%ROUTES%%'
 /// MACHINERY
 
 // Unstringify routes
-console.log('Routes before Unstringify:', settings.routes)
 settings.routes = JSON.parse(settings.routes)
-console.log('Routes after Unstringify:', settings.routes)
+console.log('...Selected models:', settings.routes)
 
 // UI
-var ui = new artoo.ui();
-ui.$().append('<style>.container{position:fixed;top:0;left:0;padding:0:margin:0;width:100%;height:100%;background:rgba(255,255,255,0.9);} .inner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);}</style><div class="container"><div class="inner"><strong>PLEASE WAIT...</strong></div></div>');
+var ui
+try {
+	ui = new artoo.ui();
+	ui.$().append('<style>.container{position:fixed;top:0;left:0;padding:0:margin:0;width:100%;height:100%;background:rgba(255,255,255,0.9);} .inner{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);}</style><div class="container"><div class="inner"><strong>PLEASE WAIT...</strong></div></div>');
+} catch(e) { console.warn('Note: minor Artoo UI issue', e)}
 // Download the CSV from the DMI tool at https://tools.digitalmethods.net/beta/googleImages/
 var app, queue
 artoo.scrapeTable('table', {
@@ -55,7 +57,9 @@ function newQueue(table, urls) {
 				// Save the CSV
 		  	console.log("Download CSV")
 		  	artoo.saveCsv(Object.values(this.tableIndex))
-				ui.kill()
+				try {
+					ui.kill()
+				} catch(e) { console.warn('Note: minor Artoo UI issue', e)}
 				alert('Clarifai queries successful')
 			} else {
 				var i = batchSize
@@ -175,7 +179,9 @@ function parseResponse(response, type, routeName, urls) {
 
 // Error message
 function notifyError(error, msg){
-	ui.kill()
+	try {
+		ui.kill()
+	} catch(e) { console.warn('Note: minor Artoo UI issue', e)}
 	console.log(msg)
 	if (error) {
 		console.error(error)
